@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#c2410c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="دليل البر" />
+  <title>دليل البر - ملاحة بدون نت</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      background-color: #0e1012;
+      color: #f9fafb;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      text-align: center;
+      direction: rtl;
+    }
+    .app-wrap {
+      max-width: 520px;
+      margin: 0 auto;
+      background: #14171c;
+      border: 1px solid #262b33;
+      border-radius: 18px;
+      padding: 16px;
+    }
+    .header {
+      background: #c2410c;
+      color: #ffffff;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .gps-box {
+      background: #1b1f26;
+      border: 1px solid #2c323d;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    .status-warn { color: #fbbf24; }
+    .status-ok { color: #4ade80; }
+    .status-err { color: #f87171; }
+    .coords-text { color: #9ca3af; margin-top: 6px; font-size: 13px; }
+    .row-btns { display: flex; gap: 8px; }
+    .row-btns .btn { flex: 1; }
+    .btn {
+      width: 100%;
+      padding: 13px 12px;
+      margin-bottom: 10px;
+      border: none;
+      border-radius: 11px;
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn:active { opacity: 0.88; }
+    .btn-gps { background: #15803d; }
+    .btn-watch-off { background: #334155; border: 1px solid #64748b; }
+    .btn-watch-on { background: #0284c7; border: 1px solid #38bdf8; }
+    .btn-save-base { background: #374151; }
+    .btn-go-base { background: #6d28d9; }
+    .btn-road { background: #ea580c; }
+    .btn-gas { background: #2563eb; }
+    .btn-safe { background: #0d9488; }
+    .base-status {
+      font-size: 12.5px;
+      color: #c4b5fd;
+      margin-bottom: 12px;
+      min-height: 18px;
+    }
+    .result-card {
+      background: #1b1f26;
+      border: 2px solid #ea580c;
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 12px;
+      display: none;
+    }
+    .dir-badge {
+      display: inline-block;
+      background: rgba(234, 88, 12, 0.2);
+      border: 1px solid #ea580c;
+      color: #fb923c;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .visuals-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin: 10px 0 14px;
+    }
+    .arrow-box {
+      width: 112px;
+      height: 112px;
+      background: #111418;
+      border: 1px solid #2c323d;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .arrow-icon {
+      font-size: 50px;
+      line-height: 1;
+      color: #fb923c;
+      transition: transform 0.2s ease;
+      display: inline-block;
+    }
+    .arrow-label { font-size: 11px; color: #9ca3af; margin-top: 6px; }
+    .target-name { margin: 6px 0; font-size: 19px; }
+    .target-sub { color: #fbbf24; font-size: 14px; }
+    .dist { color: #4ade80; font-size: 21px; font-weight: 700; margin-top: 10px; }
+    .bearing-text { color: #9ca3af; font-size: 12.5px; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="app-wrap">
+    <div class="header">دليل البر - ملاحة بدون نت</div>
+
+    <div class="gps-box">
+      <div id="status" class="status-warn">اضغطي على تحديث موقعي لقراءة GPS</div>
+      <div id="coords" class="coords-text" dir="ltr">-- , --</div>
+    </div>
+
+    <button class="btn btn-gps" onclick="getOnceGPS()">تحديث موقعي الآن (GPS)</button>
+    <button id="watchBtn" class="btn btn-watch-off" onclick="toggleWatchGPS()">
+      التتبع الحي عند الحركة: متوقف (اضغطي للتشغيل)
+    </button>
+
+    <div class="row-btns">
+      <button class="btn btn-save-base" onclick="saveBaseLocation()">حفظ موقع السيارة</button>
+      <button class="btn btn-go-base" onclick="goToBaseLocation()">العودة للسيارة</button>
+    </div>
+    <div id="baseInfo" class="base-status">لم يتم حفظ موقع سيارة أو مخيم بعد</div>
+
+    <button class="btn btn-road" onclick="selectCategory('road')">أقرب طريق</button>
+    <button class="btn btn-gas" onclick="selectCategory('gas')">أقرب محطة وقود</button>
+    <button class="btn btn-safe" onclick="selectCategory('safe')">أقرب نقطة أمان</button>
+
+    <div id="result" class="result-card">
+      <div id="dirText" class="dir-badge"></div>
+
+      <div class="visuals-row">
+        <canvas id="radarCanvas" width="160" height="160"></canvas>
+        <div class="arrow-box">
+          <div id="arrowIcon" class="arrow-icon">&#8593;</div>
+          <div class="arrow-label">سهم الاتجاه</div>
+        </div>
+      </div>
+
+      <h2 id="targetName" class="target-name"></h2>
+      <div id="targetSub" class="target-sub"></div>
+      <div id="distanceText" class="dist"></div>
+      <div id="bearingText" class="bearing-text"></div>
+    </div>
+  </div>
+
+  <script>
+    let myLat = null;
+    let myLon = null;
+    let baseLat = null;
+    let baseLon = null;
+    let watchId = null;
+    let activeMode = null;
+
+    const locations = [
+      { name: 'طريق القصيم السريع', sub: 'طريق مسفلت', cat: 'road', lat: 25.1580, lon: 46.5350 },
+      { name: 'ردمية روضة خريم', sub: 'مسار ترابي مطروق', cat: 'road', lat: 25.1320, lon: 46.5120 },
+      { name: 'طريق صلبوخ', sub: 'طريق مسفلت', cat: 'road', lat: 25.0800, lon: 46.4200 },
+      { name: 'طريق الرياض - الدمام السريع', sub: 'طريق مسفلت', cat: 'road', lat: 24.9200, lon: 47.0500 },
+      { name: 'طريق الرياض - الطائف السريع', sub: 'طريق مسفلت', cat: 'road', lat: 24.5200, lon: 46.1500 },
+      { name: 'طريق حفر الباطن - الرقعي', sub: 'طريق رئيسي', cat: 'road', lat: 28.4300, lon: 45.9600 },
+      { name: 'طريق جدة - مكة السريع', sub: 'طريق مسفلت', cat: 'road', lat: 21.4858, lon: 39.2400 },
+
+      { name: 'محطة ساسكو - طريق القصيم', sub: 'وقود وخدمات', cat: 'gas', lat: 25.1650, lon: 46.5400 },
+      { name: 'محطة الدريس - مخرج الثمامة', sub: 'وقود وبنشر', cat: 'gas', lat: 25.0950, lon: 46.4800 },
+      { name: 'محطة طريق الرياض - الدمام', sub: 'وقود وخدمات', cat: 'gas', lat: 24.9400, lon: 47.0800 },
+      { name: 'محطة طريق جدة - مكة', sub: 'وقود وخدمات', cat: 'gas', lat: 21.4500, lon: 39.2000 },
+
+      { name: 'مخيم ونقطة إسعاف موسمي', sub: 'نقطة أمان وتواجد بشري', cat: 'safe', lat: 25.1100, lon: 46.5250 },
+      { name: 'هجرة / مزرعة مأهولة', sub: 'مورد ماء ومساعدة', cat: 'safe', lat: 25.1400, lon: 46.4700 },
+      { name: 'مركز خدمات وشرطة طرق', sub: 'نقطة أمان ومساعدة', cat: 'safe', lat: 24.8900, lon: 46.9800 }
+    ];
+
+    function handlePositionUpdate(pos, isLive) {
+      myLat = pos.coords.latitude;
+      myLon = pos.coords.longitude;
+      const statusEl = document.getElementById('status');
+      statusEl.className = 'status-ok';
+      statusEl.innerText = isLive
+        ? 'تتبع حي نشط — يتحدث مع حركتك'
+        : 'تم تحديث موقعكِ بنجاح';
+      document.getElementById('coords').innerText =
+        myLat.toFixed(5) + ' , ' + myLon.toFixed(5);
+
+      if (activeMode) {
+        refreshGuidance();
+      }
+    }
+
+    function handlePositionError() {
+      const statusEl = document.getElementById('status');
+      statusEl.className = 'status-err';
+      statusEl.innerText = 'تعذر قراءة الموقع: تأكدي من تفعيل إذن الموقع في الجهاز';
+    }
+
+    function getOnceGPS() {
+      const statusEl = document.getElementById('status');
+      if (!navigator.geolocation) {
+        statusEl.className = 'status-err';
+        statusEl.innerText = 'المتصفح لا يدعم GPS';
+        return;
+      }
+      statusEl.className = 'status-warn';
+      statusEl.innerText = 'جاري التقاط موقعكِ...';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => handlePositionUpdate(pos, false),
+        handlePositionError,
+        { enableHighAccuracy: true, timeout: 12000 }
+      );
+    }
+
+    function toggleWatchGPS() {
+      const btn = document.getElementById('watchBtn');
+      const statusEl = document.getElementById('status');
+      if (!navigator.geolocation) {
+        statusEl.className = 'status-err';
+        statusEl.innerText = 'المتصفح لا يدعم GPS';
+        return;
+      }
+
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+        btn.className = 'btn btn-watch-off';
+        btn.innerText = 'التتبع الحي عند الحركة: متوقف (اضغطي للتشغيل)';
+        statusEl.className = 'status-warn';
+        statusEl.innerText = 'تم إيقاف التتبع الحي لتوفير البطارية';
+        return;
+      }
+
+      statusEl.className = 'status-warn';
+      statusEl.innerText = 'جاري تشغيل التتبع الحي عند الحركة...';
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => handlePositionUpdate(pos, true),
+        handlePositionError,
+        { enableHighAccuracy: true, maximumAge: 1500, timeout: 15000 }
+      );
+      btn.className = 'btn btn-watch-on';
+      btn.innerText = 'التتبع الحي عند الحركة: نشط (اضغطي للإيقاف)';
+    }
+
+    function saveBaseLocation() {
+      if (myLat === null || myLon === null) {
+        alert('اضغطي أولاً على "تحديث موقعي الآن (GPS)".');
+        return;
+      }
+      baseLat = myLat;
+      baseLon = myLon;
+      document.getElementById('baseInfo').innerText =
+        'تم حفظ موقع السيارة: ' + baseLat.toFixed(5) + ' , ' + baseLon.toFixed(5);
+    }
+
+    function goToBaseLocation() {
+      if (myLat === null || myLon === null) {
+        alert('اضغطي أولاً على "تحديث موقعي الآن (GPS)".');
+        return;
+      }
+      if (baseLat === null || baseLon === null) {
+        alert('لم يتم حفظ موقع سيارة أو مخيم بعد.');
+        return;
+      }
+      activeMode = 'base';
+      refreshGuidance();
+    }
+
+    function selectCategory(category) {
+      if (myLat === null || myLon === null) {
+        alert('اضغطي أولاً على "تحديث موقعي الآن (GPS)".');
+        return;
+      }
+      activeMode = category;
+      refreshGuidance();
+    }
+
+    function refreshGuidance() {
+      if (myLat === null || myLon === null || !activeMode) return;
+
+      if (activeMode === 'base') {
+        if (baseLat === null || baseLon === null) return;
+        const d = calcDistance(myLat, myLon, baseLat, baseLon);
+        const brng = calcBearing(myLat, myLon, baseLat, baseLon);
+        showGuidance('موقع السيارة / المخيم المحفوظ', 'نقطة العودة', d, brng);
+        return;
+      }
+
+      const filtered = locations.filter((item) => item.cat === activeMode);
+      let best = null;
+      let minDist = Infinity;
+
+      for (const item of filtered) {
+        const d = calcDistance(myLat, myLon, item.lat, item.lon);
+        if (d < minDist) {
+          minDist = d;
+          best = item;
+        }
+      }
+
+      if (best) {
+        const brng = calcBearing(myLat, myLon, best.lat, best.lon);
+        showGuidance(best.name, best.sub, minDist, brng);
+      }
+    }
+
+    function showGuidance(name, subtitle, distKm, bearingDeg) {
+      document.getElementById('result').style.display = 'block';
+      document.getElementById('dirText').innerText = 'الاتجاه: ' + getDirectionName(bearingDeg);
+      document.getElementById('targetName').innerText = name;
+      document.getElementById('targetSub').innerText = subtitle;
+      document.getElementById('distanceText').innerText =
+        'المسافة المباشرة: ' + distKm.toFixed(2) + ' كم';
+      document.getElementById('bearingText').innerText =
+        'زاوية الاتجاه: ' + Math.round(bearingDeg) + '°';
+
+      document.getElementById('arrowIcon').style.transform =
+        'rotate(' + bearingDeg + 'deg)';
+
+      drawRadar(bearingDeg);
+    }
+
+    function drawRadar(bearingDeg) {
+      const canvas = document.getElementById('radarCanvas');
+      if (!canvas || !canvas.getContext) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = Math.min(w, h) / 2 - 22;
+
+      ctx.clearRect(0, 0, w, h);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 0.55, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - r);
+      ctx.lineTo(cx, cy + r);
+      ctx.moveTo(cx - r, cy);
+      ctx.lineTo(cx + r, cy);
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('ش', cx, cy - r - 12);
+      ctx.fillText('ج', cx, cy + r + 12);
+      ctx.fillText('ق', cx + r + 12, cy);
+      ctx.fillText('غ', cx - r - 12, cy);
+
+      const rad = ((bearingDeg - 90) * Math.PI) / 180;
+      const tx = cx + r * Math.cos(rad);
+      const ty = cy + r * Math.sin(rad);
+
+      ctx.strokeStyle = '#fb923c';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(tx, ty);
+      ctx.stroke();
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#fb923c';
+      ctx.beginPath();
+      ctx.arc(tx, ty, 9, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function calcDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLon = ((lon2 - lon1) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    }
+
+    function calcBearing(lat1, lon1, lat2, lon2) {
+      const dLon = ((lon2 - lon1) * Math.PI) / 180;
+      const y = Math.sin(dLon) * Math.cos((lat2 * Math.PI) / 180);
+      const x =
+        Math.cos((lat1 * Math.PI) / 180) * Math.sin((lat2 * Math.PI) / 180) -
+        Math.sin((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.cos(dLon);
+      return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+    }
+
+    function getDirectionName(deg) {
+      const dirs = [
+        'شمال (N)',
+        'شمال شرقي (NE)',
+        'شرق (E)',
+        'جنوب شرقي (SE)',
+        'جنوب (S)',
+        'جنوب غربي (SW)',
+        'غرب (W)',
+        'شمال غربي (NW)'
+      ];
+      return dirs[Math.floor((((deg + 22.5) % 360) / 45))];
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

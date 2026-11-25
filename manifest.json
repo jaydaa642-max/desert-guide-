@@ -1,0 +1,14 @@
+{
+  "name": "دليل البر - ملاحة بدون نت",
+  "short_name": "دليل البر",
+  "description": "تطبيق ملاحة للطرق والمحطات ونقاط الأمان وحفظ موقع السيارة مع رادار وسهم اتجاه.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "dir": "rtl",
+  "lang": "ar",
+  "background_color": "#0e1012",
+  "theme_color": "#c2410c",
+  "icons": []
+}
