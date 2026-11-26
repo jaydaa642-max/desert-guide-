@@ -246,12 +246,13 @@
 </head>
 <body>
   <div class="app">
-    <div class="header">دليل البر - ملاحة بدون نت (نسخة البوصلة)</div>
+    <div class="header">دليل البر - ملاحة بدون نت</div>
 
     <div class="status-box">
       <div class="status-title" id="gpsStatus">جاهز — اضغطي تحديث موقعي الآن</div>
       <div class="coords-text" id="currentCoords">--.-----, --.-----</div>
       <div class="sub-meta" id="gpsAccuracy">الدقة: غير محددة | البوصلة: بانتظار التفعيل</div>
+      <div class="sub-meta" id="offlineDataMeta">بيانات المنطقة المحفوظة: لم تُحمّل بعد (تعمل النقاط الافتراضية)</div>
     </div>
 
     <div class="row-2">
@@ -268,9 +269,11 @@
 
     <div class="saved-car-box" id="savedCarInfo">لم يتم حفظ موقع سيارة أو مخيم بعد</div>
 
-    <button class="btn btn-orange" data-preset="road">أقرب طريق</button>
-    <button class="btn btn-blue" data-preset="station">أقرب محطة وقود</button>
-    <button class="btn btn-teal" data-preset="safety">أقرب نقطة أمان</button>
+    <button class="btn btn-orange" data-category="road">أقرب طريق</button>
+    <button class="btn btn-blue" data-category="station">أقرب محطة وقود</button>
+    <button class="btn btn-teal" data-category="safety">أقرب نقطة أمان</button>
+
+    <button class="btn btn-dark" id="btnDownloadArea">تحميل بيانات الطرق والمحطات للمنطقة (يحتاج نت مرة واحدة)</button>
 
     <div class="mini-actions">
       <button class="btn btn-dark mini-btn" id="btnCopyCoords">نسخ الإحداثيات الحالية</button>
@@ -291,37 +294,31 @@
       <div class="target-name" id="targetName">--</div>
       <div class="target-note" id="targetNote">--</div>
       <div class="distance-val" id="distanceVal">المسافة المباشرة: -- كم</div>
-      <div class="bearing-val" id="bearingVal">زاوية الوجهة: --° | اتجاهك: --°</div>
+      <div class="bearing-val" id="bearingVal">زاوية الوجهة: --° | التفافك: --°</div>
       <div class="alert-banner" id="alertBanner">أنتِ قريبة جدًا من الوجهة (أقل من 30 مترًا)!</div>
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY_CAR = "desert_guide_saved_car_v2";
+    const STORAGE_KEY_CAR = "desert_guide_saved_car_v3";
+    const STORAGE_KEY_AREA = "desert_guide_area_points_v1";
 
-    const PRESETS = {
-      road: {
-        name: "طريق الثمامة الرئيسي",
-        note: "مسار رئيسي قريب من منطقة الثمامة",
-        lat: 25.0550,
-        lng: 46.7650
-      },
-      station: {
-        name: "محطة الدريس - مخرج الثمامة",
-        note: "وقود وبنشر",
-        lat: 25.0985,
-        lng: 46.7310
-      },
-      safety: {
-        name: "نقطة تجمع وأمان الثمامة",
-        note: "نقطة مرجعية آمنة",
-        lat: 25.0320,
-        lng: 46.7900
-      }
+    const DEFAULT_POINTS = {
+      road: [
+        { name: "طريق الثمامة الرئيسي", note: "مسار رئيسي قريب من الثمامة", lat: 25.0550, lng: 46.7650 },
+        { name: "طريق المطار / طريق خريص", note: "طريق معبّد رئيسي", lat: 24.7860, lng: 46.6750 }
+      ],
+      station: [
+        { name: "محطة الدريس - مخرج الثمامة", note: "وقود وبنشر", lat: 25.0985, lng: 46.7310 }
+      ],
+      safety: [
+        { name: "نقطة تجمع وأمان الثمامة", note: "نقطة مرجعية آمنة", lat: 25.0320, lng: 46.7900 }
+      ]
     };
 
     let currentPos = null;
     let savedCar = loadSavedCar();
+    let areaPoints = loadAreaPoints();
     let activeTarget = null;
     let watchId = null;
     let arrivalAlertShown = false;
@@ -331,11 +328,13 @@
     const gpsStatusEl = document.getElementById("gpsStatus");
     const currentCoordsEl = document.getElementById("currentCoords");
     const gpsAccuracyEl = document.getElementById("gpsAccuracy");
+    const offlineDataMetaEl = document.getElementById("offlineDataMeta");
     const btnUpdateGps = document.getElementById("btnUpdateGps");
     const btnEnableCompass = document.getElementById("btnEnableCompass");
     const btnLiveTrack = document.getElementById("btnLiveTrack");
     const btnSaveCar = document.getElementById("btnSaveCar");
     const btnGoCar = document.getElementById("btnGoCar");
+    const btnDownloadArea = document.getElementById("btnDownloadArea");
     const btnCopyCoords = document.getElementById("btnCopyCoords");
     const btnClearCar = document.getElementById("btnClearCar");
     const savedCarInfoEl = document.getElementById("savedCarInfo");
@@ -363,6 +362,32 @@
 
     function persistSavedCar(carObj) {
       try { localStorage.setItem(STORAGE_KEY_CAR, JSON.stringify(carObj)); } catch (e) {}
+    }
+
+    function loadAreaPoints() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_AREA);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.road) && Array.isArray(parsed.station) && Array.isArray(parsed.safety)) {
+          return parsed;
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    function persistAreaPoints(data) {
+      try { localStorage.setItem(STORAGE_KEY_AREA, JSON.stringify(data)); } catch (e) {}
+    }
+
+    function renderOfflineDataStatus() {
+      if (!areaPoints) {
+        offlineDataMetaEl.textContent = "بيانات المنطقة المحفوظة: غير محمّلة (تعمل النقاط الافتراضية)";
+        return;
+      }
+      const total = (areaPoints.road?.length || 0) + (areaPoints.station?.length || 0) + (areaPoints.safety?.length || 0);
+      offlineDataMetaEl.textContent =
+        `محفوظ بدون نت: ${areaPoints.road.length} طريق، ${areaPoints.station.length} محطة، ${areaPoints.safety.length} نقطة أمان (${total} نقطة)`;
     }
 
     function renderSavedCarStatus() {
@@ -488,7 +513,6 @@
 
       rCtx.clearRect(0, 0, w, h);
 
-      // دوائر الرادار
       rCtx.strokeStyle = "#1e3a8a";
       rCtx.lineWidth = 1;
       [0.35, 0.7, 1].forEach((ratio) => {
@@ -497,7 +521,6 @@
         rCtx.stroke();
       });
 
-      // المحاور الأربعة
       rCtx.beginPath();
       rCtx.moveTo(cx - maxR, cy);
       rCtx.lineTo(cx + maxR, cy);
@@ -505,7 +528,6 @@
       rCtx.lineTo(cx, cy + maxR);
       rCtx.stroke();
 
-      // تدوير الحروف الأساسية عكس التفاف الشخص
       const cardinals = [
         { label: "ش", deg: 0 },
         { label: "ق", deg: 90 },
@@ -523,13 +545,12 @@
         rCtx.fillText(c.label, lx, ly);
       });
 
-      // نقطة الشخص في المركز مع مؤشر صغير للأمام
       rCtx.fillStyle = "#38bdf8";
       rCtx.beginPath();
       rCtx.arc(cx, cy, 4.5, 0, Math.PI * 2);
       rCtx.fill();
 
-      // موقع نقطة الوجهة داخل الرادار بعد طرح التفاف الشخص (النقطة فقط بدون خط أثر)
+      // النقطة فقط (بدون خط أثر)
       const normalizedDist = Math.min(distMeters / 2000, 1);
       const rDot = Math.max(normalizedDist * (maxR - 8), 12);
       const rad = toRad(relativeBearingDeg);
@@ -643,9 +664,124 @@
       );
     }
 
-    btnEnableCompass.addEventListener("click", () => {
-      requestCompassPermission();
-    });
+    function findNearestPoint(category) {
+      const source = areaPoints || DEFAULT_POINTS;
+      const list = (source[category] && source[category].length > 0)
+        ? source[category]
+        : (DEFAULT_POINTS[category] || []);
+
+      if (!list.length) return null;
+
+      if (!currentPos) return list[0];
+
+      let best = list[0];
+      let minDist = distanceMeters(currentPos.lat, currentPos.lng, best.lat, best.lng);
+
+      for (let i = 1; i < list.length; i++) {
+        const d = distanceMeters(currentPos.lat, currentPos.lng, list[i].lat, list[i].lng);
+        if (d < minDist) {
+          minDist = d;
+          best = list[i];
+        }
+      }
+      return best;
+    }
+
+    // تحميل بيانات الطرق والمحطات ونقاط الأمان من OpenStreetMap وحفظها محليًا للعمل بدون نت
+    async function downloadAreaDataForOffline() {
+      if (!navigator.onLine) {
+        gpsStatusEl.textContent = "لا يوجد اتصال بالإنترنت حاليًا — يتم استخدام البيانات المحفوظة";
+        return;
+      }
+
+      const startDownload = async (posObj) => {
+        const lat = posObj.lat;
+        const lng = posObj.lng;
+        const radiusMeters = 35000; // 35 كم حول موقعك
+        gpsStatusEl.textContent = "جاري تحميل بيانات الطرق والمحطات من المنطقة...";
+
+        const query = `
+          [out:json][timeout:25];
+          (
+            way["highway"~"motorway|trunk|primary|secondary"](around:${radiusMeters},${lat},${lng});
+            node["amenity"="fuel"](around:${radiusMeters},${lat},${lng});
+            way["amenity"="fuel"](around:${radiusMeters},${lat},${lng});
+            node["amenity"~"police|hospital|shelter"](around:${radiusMeters},${lat},${lng});
+          );
+          out center 80;
+        `;
+
+        try {
+          const resp = await fetch("https://overpass-api.de/api/interpreter", {
+            method: "POST",
+            body: query
+          });
+          if (!resp.ok) throw new Error("network");
+          const data = await resp.json();
+
+          const road = [];
+          const station = [];
+          const safety = [];
+
+          for (const el of (data.elements || [])) {
+            const pLat = typeof el.lat === "number" ? el.lat : el.center?.lat;
+            const pLng = typeof el.lon === "number" ? el.lon : el.center?.lon;
+            if (typeof pLat !== "number" || typeof pLng !== "number") continue;
+
+            const tags = el.tags || {};
+            const name = tags.name || tags["name:ar"] || "";
+
+            if (tags.highway && road.length < 25) {
+              road.push({
+                name: name || "طريق رئيسي قريب",
+                note: `طريق (${tags.highway}) — محفوظ بدون نت`,
+                lat: pLat,
+                lng: pLng
+              });
+            } else if (tags.amenity === "fuel" && station.length < 20) {
+              station.push({
+                name: name || "محطة وقود قريبة",
+                note: "محطة وقود — محفوظة بدون نت",
+                lat: pLat,
+                lng: pLng
+              });
+            } else if (tags.amenity && safety.length < 15) {
+              safety.push({
+                name: name || "نقطة أمان / خدمة قريبة",
+                note: `نقطة خدمة (${tags.amenity}) — محفوظة بدون نت`,
+                lat: pLat,
+                lng: pLng
+              });
+            }
+          }
+
+          areaPoints = {
+            road: road.length ? road : DEFAULT_POINTS.road,
+            station: station.length ? station : DEFAULT_POINTS.station,
+            safety: safety.length ? safety : DEFAULT_POINTS.safety,
+            updatedAt: Date.now()
+          };
+
+          persistAreaPoints(areaPoints);
+          renderOfflineDataStatus();
+          gpsStatusEl.textContent = "تم حفظ بيانات الطرق والمحطات بنجاح للعمل بدون نت";
+        } catch (e) {
+          gpsStatusEl.textContent = "تعذر تحميل بيانات المنطقة الآن — جرّبي لاحقًا أو استخدمي النقاط المحفوظة";
+        }
+      };
+
+      if (currentPos) {
+        await startDownload(currentPos);
+      } else {
+        requestCurrentPosition((posObj) => {
+          if (posObj) startDownload(posObj);
+        });
+      }
+    }
+
+    btnDownloadArea.addEventListener("click", downloadAreaDataForOffline);
+
+    btnEnableCompass.addEventListener("click", requestCompassPermission);
 
     btnUpdateGps.addEventListener("click", () => {
       if (!compassActive) requestCompassPermission();
@@ -737,23 +873,26 @@
       }
     });
 
-    document.querySelectorAll("[data-preset]").forEach((btn) => {
+    document.querySelectorAll("[data-category]").forEach((btn) => {
       btn.addEventListener("click", () => {
         if (!compassActive) requestCompassPermission();
-        const key = btn.getAttribute("data-preset");
-        const p = PRESETS[key];
-        if (!p) return;
-        activeTarget = { ...p };
+        const cat = btn.getAttribute("data-category");
+        const best = findNearestPoint(cat);
+        if (!best) return;
+        activeTarget = { ...best };
         arrivalAlertShown = false;
         if (!currentPos) {
-          requestCurrentPosition(() => updateNavigationUI());
+          requestCurrentPosition(() => {
+            const updatedBest = findNearestPoint(cat);
+            if (updatedBest) activeTarget = { ...updatedBest };
+            updateNavigationUI();
+          });
         } else {
           updateNavigationUI();
         }
       });
     });
 
-    // مسح الكاش القديم تلقائيًا حتى يظهر التحديث فورًا
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.getRegistrations().then((regs) => {
         regs.forEach((r) => r.update());
@@ -761,6 +900,7 @@
     }
 
     renderSavedCarStatus();
+    renderOfflineDataStatus();
   </script>
 </body>
 </html>
