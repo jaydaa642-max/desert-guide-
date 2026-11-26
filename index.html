@@ -22,6 +22,7 @@
       --purple: #7c3aed;
       --teal: #0d9488;
       --amber: #d97706;
+      --red: #dc2626;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -103,6 +104,7 @@
     .btn-orange { background: var(--accent); }
     .btn-teal { background: var(--teal); }
     .btn-amber { background: var(--amber); }
+    .btn-red { background: var(--red); }
     .btn-dark { background: #1e293b; border: 1px solid var(--border); }
 
     .row-2 {
@@ -128,7 +130,7 @@
       background: rgba(22, 163, 74, 0.12);
     }
 
-    .nav-panel {
+    .nav-panel, .tool-panel {
       background: var(--card);
       border: 1.5px solid var(--accent);
       border-radius: 14px;
@@ -137,7 +139,8 @@
       display: none;
     }
 
-    .nav-panel.show { display: block; }
+    .tool-panel { border-color: var(--border); text-align: right; }
+    .nav-panel.show, .tool-panel.show { display: block; }
 
     .direction-badge {
       display: inline-block;
@@ -242,6 +245,60 @@
       font-size: 13px;
       border-radius: 9px;
     }
+
+    textarea.sos-box {
+      width: 100%;
+      min-height: 115px;
+      background: var(--card-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 10px;
+      resize: vertical;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .history-item {
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 11px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .history-coords {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      direction: ltr;
+      font-size: 12px;
+      color: #e2e8f0;
+    }
+
+    .history-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .tiny-btn {
+      padding: 6px 8px;
+      font-size: 11px;
+      border-radius: 7px;
+      width: auto;
+    }
   </style>
 </head>
 <body>
@@ -252,7 +309,7 @@
       <div class="status-title" id="gpsStatus">جاهز — اضغطي تحديث موقعي الآن</div>
       <div class="coords-text" id="currentCoords">--.-----, --.-----</div>
       <div class="sub-meta" id="gpsAccuracy">الدقة: غير محددة | البوصلة: بانتظار التفعيل</div>
-      <div class="sub-meta" id="offlineDataMeta">بيانات المنطقة المحفوظة: لم تُحمّل بعد (تعمل النقاط الافتراضية)</div>
+      <div class="sub-meta" id="offlineDataMeta">بيانات المنطقة المحفوظة: غير محمّلة (تعمل النقاط الافتراضية)</div>
     </div>
 
     <div class="row-2">
@@ -273,11 +330,34 @@
     <button class="btn btn-blue" data-category="station">أقرب محطة وقود</button>
     <button class="btn btn-teal" data-category="safety">أقرب نقطة أمان</button>
 
+    <div class="row-2">
+      <button class="btn btn-red" id="btnPrepareSos">تجهيز رسالة موقعي</button>
+      <button class="btn btn-dark" id="btnToggleHistory">سجل المواقع المحفوظة</button>
+    </div>
+
     <button class="btn btn-dark" id="btnDownloadArea">تحميل بيانات الطرق والمحطات للمنطقة (يحتاج نت مرة واحدة)</button>
 
     <div class="mini-actions">
       <button class="btn btn-dark mini-btn" id="btnCopyCoords">نسخ الإحداثيات الحالية</button>
       <button class="btn btn-dark mini-btn" id="btnClearCar">مسح موقع السيارة</button>
+    </div>
+
+    <div class="tool-panel" id="sosPanel">
+      <div class="target-name" style="font-size:15px; margin-bottom:8px;">رسالة الموقع للمرافقين / الطوارئ</div>
+      <textarea class="sos-box" id="sosText" readonly></textarea>
+      <div class="row-2">
+        <button class="btn btn-green mini-btn" id="btnCopySos">نسخ الرسالة</button>
+        <button class="btn btn-blue mini-btn" id="btnShareSos">مشاركة / إرسال</button>
+      </div>
+    </div>
+
+    <div class="tool-panel" id="historyPanel">
+      <div class="row-2" style="align-items:center; margin-bottom:6px;">
+        <div class="target-name" style="font-size:15px; margin:0;">سجل آخر المواقع</div>
+        <button class="btn btn-dark tiny-btn" style="justify-self:end;" id="btnClearHistory">مسح السجل</button>
+      </div>
+      <div class="sub-meta">يُحفظ تلقائيًا عند قراءة الموقع ليكون مرجعًا في حال انقطاع الاتصال</div>
+      <div class="history-list" id="historyList"></div>
     </div>
 
     <div class="nav-panel" id="navPanel">
@@ -300,8 +380,9 @@
   </div>
 
   <script>
-    const STORAGE_KEY_CAR = "desert_guide_saved_car_v3";
+    const STORAGE_KEY_CAR = "desert_guide_saved_car_v4";
     const STORAGE_KEY_AREA = "desert_guide_area_points_v1";
+    const STORAGE_KEY_HISTORY = "desert_guide_location_history_v1";
 
     const DEFAULT_POINTS = {
       road: [
@@ -316,9 +397,15 @@
       ]
     };
 
+    const OVERPASS_ENDPOINTS = [
+      "https://overpass-api.de/api/interpreter",
+      "https://overpass.kumi.systems/api/interpreter"
+    ];
+
     let currentPos = null;
     let savedCar = loadSavedCar();
     let areaPoints = loadAreaPoints();
+    let locationHistory = loadLocationHistory();
     let activeTarget = null;
     let watchId = null;
     let arrivalAlertShown = false;
@@ -334,10 +421,19 @@
     const btnLiveTrack = document.getElementById("btnLiveTrack");
     const btnSaveCar = document.getElementById("btnSaveCar");
     const btnGoCar = document.getElementById("btnGoCar");
+    const btnPrepareSos = document.getElementById("btnPrepareSos");
+    const btnToggleHistory = document.getElementById("btnToggleHistory");
     const btnDownloadArea = document.getElementById("btnDownloadArea");
     const btnCopyCoords = document.getElementById("btnCopyCoords");
     const btnClearCar = document.getElementById("btnClearCar");
     const savedCarInfoEl = document.getElementById("savedCarInfo");
+    const sosPanelEl = document.getElementById("sosPanel");
+    const sosTextEl = document.getElementById("sosText");
+    const btnCopySos = document.getElementById("btnCopySos");
+    const btnShareSos = document.getElementById("btnShareSos");
+    const historyPanelEl = document.getElementById("historyPanel");
+    const historyListEl = document.getElementById("historyList");
+    const btnClearHistory = document.getElementById("btnClearHistory");
     const navPanelEl = document.getElementById("navPanel");
     const directionBadgeEl = document.getElementById("directionBadge");
     const arrowIconEl = document.getElementById("arrowIcon");
@@ -378,6 +474,90 @@
 
     function persistAreaPoints(data) {
       try { localStorage.setItem(STORAGE_KEY_AREA, JSON.stringify(data)); } catch (e) {}
+    }
+
+    function loadLocationHistory() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_HISTORY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {}
+      return [];
+    }
+
+    function persistLocationHistory(list) {
+      try { localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(list.slice(0, 15))); } catch (e) {}
+    }
+
+    function formatTimeLabel(ts) {
+      try {
+        return new Date(ts).toLocaleString("ar-SA", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
+      } catch (e) {
+        return "";
+      }
+    }
+
+    function recordHistoryPoint(posObj) {
+      const last = locationHistory[0];
+      if (last && Math.abs(last.lat - posObj.lat) < 0.00005 && Math.abs(last.lng - posObj.lng) < 0.00005) {
+        return;
+      }
+      locationHistory = [
+        { lat: posObj.lat, lng: posObj.lng, accuracy: Math.round(posObj.accuracy || 0), time: Date.now() },
+        ...locationHistory
+      ].slice(0, 15);
+      persistLocationHistory(locationHistory);
+      renderHistoryList();
+    }
+
+    function renderHistoryList() {
+      if (!locationHistory.length) {
+        historyListEl.innerHTML = `<div class="sub-meta">لا توجد مواقع مسجلة في السجل بعد.</div>`;
+        return;
+      }
+      historyListEl.innerHTML = "";
+      locationHistory.forEach((item, idx) => {
+        const row = document.createElement("div");
+        row.className = "history-item";
+        row.innerHTML = `
+          <div>
+            <div class="history-coords">${item.lat.toFixed(5)}, ${item.lng.toFixed(5)}</div>
+            <div class="sub-meta" style="margin-top:2px;">${formatTimeLabel(item.time)} • دقة ±${item.accuracy || 0}م</div>
+          </div>
+          <div class="history-actions">
+            <button class="btn btn-purple tiny-btn" data-go-idx="${idx}">توجيه</button>
+            <button class="btn btn-dark tiny-btn" data-copy-idx="${idx}">نسخ</button>
+          </div>
+        `;
+        historyListEl.appendChild(row);
+      });
+
+      historyListEl.querySelectorAll("[data-go-idx]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const item = locationHistory[Number(btn.getAttribute("data-go-idx"))];
+          if (!item) return;
+          activeTarget = {
+            name: "موقع مسجل سابقًا",
+            note: `سُجّل ${formatTimeLabel(item.time)}`,
+            lat: item.lat,
+            lng: item.lng
+          };
+          arrivalAlertShown = false;
+          if (!currentPos) requestCurrentPosition(() => updateNavigationUI());
+          else updateNavigationUI();
+        });
+      });
+
+      historyListEl.querySelectorAll("[data-copy-idx]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const item = locationHistory[Number(btn.getAttribute("data-copy-idx"))];
+          if (!item) return;
+          const text = `${item.lat.toFixed(6)}, ${item.lng.toFixed(6)}`;
+          try { await navigator.clipboard.writeText(text); } catch (e) {}
+          gpsStatusEl.textContent = `تم نسخ الإحداثيات: ${text}`;
+        });
+      });
     }
 
     function renderOfflineDataStatus() {
@@ -494,9 +674,7 @@
     }
 
     function getCurrentUserHeading() {
-      if (typeof deviceHeading === "number" && !Number.isNaN(deviceHeading)) {
-        return deviceHeading;
-      }
+      if (typeof deviceHeading === "number" && !Number.isNaN(deviceHeading)) return deviceHeading;
       if (currentPos && typeof currentPos.heading === "number" && !Number.isNaN(currentPos.heading)) {
         return (currentPos.heading + 360) % 360;
       }
@@ -633,6 +811,7 @@
 
       currentCoordsEl.textContent = `${currentPos.lat.toFixed(5)}, ${currentPos.lng.toFixed(5)}`;
       updateAccuracyAndCompassLine();
+      recordHistoryPoint(currentPos);
       gpsStatusEl.textContent = isLive
         ? "تتبع حي نشط — يتحدث مع حركتك"
         : "تم تحديث الموقع بنجاح";
@@ -664,19 +843,76 @@
       );
     }
 
+    function buildSosMessage() {
+      const ref = currentPos || savedCar || locationHistory[0];
+      if (!ref) {
+        return "لا توجد إحداثيات متاحة حاليًا. اضغطي تحديث موقعي (GPS) أولًا.";
+      }
+      const lat = ref.lat.toFixed(6);
+      const lng = ref.lng.toFixed(6);
+      const acc = ref.accuracy ? `±${Math.round(ref.accuracy)} م` : "غير محددة";
+      const timeStr = new Date().toLocaleString("ar-SA");
+      const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
+      return [
+        "موقعي الحالي (دليل البر):",
+        `الإحداثيات: ${lat}, ${lng}`,
+        `الدقة: ${acc}`,
+        `الوقت: ${timeStr}`,
+        `الرابط: ${mapsLink}`
+      ].join("\n");
+    }
+
+    btnPrepareSos.addEventListener("click", () => {
+      const openSos = () => {
+        sosTextEl.value = buildSosMessage();
+        sosPanelEl.classList.add("show");
+      };
+      if (!currentPos) {
+        requestCurrentPosition(openSos);
+      } else {
+        openSos();
+      }
+    });
+
+    btnCopySos.addEventListener("click", async () => {
+      const txt = sosTextEl.value || buildSosMessage();
+      try { await navigator.clipboard.writeText(txt); } catch (e) {}
+      gpsStatusEl.textContent = "تم نسخ رسالة الموقع";
+    });
+
+    btnShareSos.addEventListener("click", async () => {
+      const txt = sosTextEl.value || buildSosMessage();
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: "موقعي الحالي - دليل البر", text: txt });
+          return;
+        } catch (e) {}
+      }
+      try { await navigator.clipboard.writeText(txt); } catch (e) {}
+      gpsStatusEl.textContent = "تم نسخ الرسالة للصقها وإرسالها";
+    });
+
+    btnToggleHistory.addEventListener("click", () => {
+      renderHistoryList();
+      historyPanelEl.classList.toggle("show");
+    });
+
+    btnClearHistory.addEventListener("click", () => {
+      locationHistory = [];
+      persistLocationHistory(locationHistory);
+      renderHistoryList();
+    });
+
     function findNearestPoint(category) {
       const source = areaPoints || DEFAULT_POINTS;
       const list = (source[category] && source[category].length > 0)
         ? source[category]
         : (DEFAULT_POINTS[category] || []);
-
       if (!list.length) return null;
-
       if (!currentPos) return list[0];
 
       let best = list[0];
       let minDist = distanceMeters(currentPos.lat, currentPos.lng, best.lat, best.lng);
-
       for (let i = 1; i < list.length; i++) {
         const d = distanceMeters(currentPos.lat, currentPos.lng, list[i].lat, list[i].lng);
         if (d < minDist) {
@@ -687,7 +923,6 @@
       return best;
     }
 
-    // تحميل بيانات الطرق والمحطات ونقاط الأمان من OpenStreetMap وحفظها محليًا للعمل بدون نت
     async function downloadAreaDataForOffline() {
       if (!navigator.onLine) {
         gpsStatusEl.textContent = "لا يوجد اتصال بالإنترنت حاليًا — يتم استخدام البيانات المحفوظة";
@@ -697,7 +932,7 @@
       const startDownload = async (posObj) => {
         const lat = posObj.lat;
         const lng = posObj.lng;
-        const radiusMeters = 35000; // 35 كم حول موقعك
+        const radiusMeters = 35000;
         gpsStatusEl.textContent = "جاري تحميل بيانات الطرق والمحطات من المنطقة...";
 
         const query = `
@@ -711,76 +946,78 @@
           out center 80;
         `;
 
-        try {
-          const resp = await fetch("https://overpass-api.de/api/interpreter", {
-            method: "POST",
-            body: query
-          });
-          if (!resp.ok) throw new Error("network");
-          const data = await resp.json();
-
-          const road = [];
-          const station = [];
-          const safety = [];
-
-          for (const el of (data.elements || [])) {
-            const pLat = typeof el.lat === "number" ? el.lat : el.center?.lat;
-            const pLng = typeof el.lon === "number" ? el.lon : el.center?.lon;
-            if (typeof pLat !== "number" || typeof pLng !== "number") continue;
-
-            const tags = el.tags || {};
-            const name = tags.name || tags["name:ar"] || "";
-
-            if (tags.highway && road.length < 25) {
-              road.push({
-                name: name || "طريق رئيسي قريب",
-                note: `طريق (${tags.highway}) — محفوظ بدون نت`,
-                lat: pLat,
-                lng: pLng
-              });
-            } else if (tags.amenity === "fuel" && station.length < 20) {
-              station.push({
-                name: name || "محطة وقود قريبة",
-                note: "محطة وقود — محفوظة بدون نت",
-                lat: pLat,
-                lng: pLng
-              });
-            } else if (tags.amenity && safety.length < 15) {
-              safety.push({
-                name: name || "نقطة أمان / خدمة قريبة",
-                note: `نقطة خدمة (${tags.amenity}) — محفوظة بدون نت`,
-                lat: pLat,
-                lng: pLng
-              });
+        let data = null;
+        for (const endpoint of OVERPASS_ENDPOINTS) {
+          try {
+            const resp = await fetch(endpoint, { method: "POST", body: query });
+            if (resp.ok) {
+              data = await resp.json();
+              break;
             }
-          }
-
-          areaPoints = {
-            road: road.length ? road : DEFAULT_POINTS.road,
-            station: station.length ? station : DEFAULT_POINTS.station,
-            safety: safety.length ? safety : DEFAULT_POINTS.safety,
-            updatedAt: Date.now()
-          };
-
-          persistAreaPoints(areaPoints);
-          renderOfflineDataStatus();
-          gpsStatusEl.textContent = "تم حفظ بيانات الطرق والمحطات بنجاح للعمل بدون نت";
-        } catch (e) {
-          gpsStatusEl.textContent = "تعذر تحميل بيانات المنطقة الآن — جرّبي لاحقًا أو استخدمي النقاط المحفوظة";
+          } catch (e) {}
         }
+
+        if (!data) {
+          gpsStatusEl.textContent = "تعذر تحميل بيانات المنطقة الآن — تعمل النقاط المحفوظة والافتراضية";
+          return;
+        }
+
+        const road = [];
+        const station = [];
+        const safety = [];
+
+        for (const el of (data.elements || [])) {
+          const pLat = typeof el.lat === "number" ? el.lat : el.center?.lat;
+          const pLng = typeof el.lon === "number" ? el.lon : el.center?.lon;
+          if (typeof pLat !== "number" || typeof pLng !== "number") continue;
+
+          const tags = el.tags || {};
+          const name = tags.name || tags["name:ar"] || "";
+
+          if (tags.highway && road.length < 25) {
+            road.push({
+              name: name || "طريق رئيسي قريب",
+              note: `طريق (${tags.highway}) — محفوظ بدون نت`,
+              lat: pLat,
+              lng: pLng
+            });
+          } else if (tags.amenity === "fuel" && station.length < 20) {
+            station.push({
+              name: name || "محطة وقود قريبة",
+              note: "محطة وقود — محفوظة بدون نت",
+              lat: pLat,
+              lng: pLng
+            });
+          } else if (tags.amenity && safety.length < 15) {
+            safety.push({
+              name: name || "نقطة أمان / خدمة قريبة",
+              note: `نقطة خدمة (${tags.amenity}) — محفوظة بدون نت`,
+              lat: pLat,
+              lng: pLng
+            });
+          }
+        }
+
+        areaPoints = {
+          road: road.length ? road : DEFAULT_POINTS.road,
+          station: station.length ? station : DEFAULT_POINTS.station,
+          safety: safety.length ? safety : DEFAULT_POINTS.safety,
+          updatedAt: Date.now()
+        };
+
+        persistAreaPoints(areaPoints);
+        renderOfflineDataStatus();
+        gpsStatusEl.textContent = "تم حفظ بيانات الطرق والمحطات بنجاح للعمل بدون نت";
       };
 
       if (currentPos) {
         await startDownload(currentPos);
       } else {
-        requestCurrentPosition((posObj) => {
-          if (posObj) startDownload(posObj);
-        });
+        requestCurrentPosition((posObj) => { if (posObj) startDownload(posObj); });
       }
     }
 
     btnDownloadArea.addEventListener("click", downloadAreaDataForOffline);
-
     btnEnableCompass.addEventListener("click", requestCompassPermission);
 
     btnUpdateGps.addEventListener("click", () => {
@@ -819,11 +1056,8 @@
     }
 
     btnSaveCar.addEventListener("click", () => {
-      if (currentPos) {
-        saveCarNow(currentPos);
-      } else {
-        requestCurrentPosition((posObj) => { if (posObj) saveCarNow(posObj); });
-      }
+      if (currentPos) saveCarNow(currentPos);
+      else requestCurrentPosition((posObj) => { if (posObj) saveCarNow(posObj); });
     });
 
     btnGoCar.addEventListener("click", () => {
@@ -839,11 +1073,8 @@
         lng: savedCar.lng
       };
       arrivalAlertShown = false;
-      if (!currentPos) {
-        requestCurrentPosition(() => updateNavigationUI());
-      } else {
-        updateNavigationUI();
-      }
+      if (!currentPos) requestCurrentPosition(() => updateNavigationUI());
+      else updateNavigationUI();
     });
 
     btnClearCar.addEventListener("click", () => {
@@ -865,12 +1096,8 @@
         gpsStatusEl.textContent = "لا توجد إحداثيات للنسخ بعد";
         return;
       }
-      try {
-        await navigator.clipboard.writeText(textToCopy);
-        gpsStatusEl.textContent = `تم نسخ الإحداثيات: ${textToCopy}`;
-      } catch (e) {
-        gpsStatusEl.textContent = `الإحداثيات: ${textToCopy}`;
-      }
+      try { await navigator.clipboard.writeText(textToCopy); } catch (e) {}
+      gpsStatusEl.textContent = `تم نسخ الإحداثيات: ${textToCopy}`;
     });
 
     document.querySelectorAll("[data-category]").forEach((btn) => {
@@ -901,6 +1128,7 @@
 
     renderSavedCarStatus();
     renderOfflineDataStatus();
+    renderHistoryList();
   </script>
 </body>
 </html>
