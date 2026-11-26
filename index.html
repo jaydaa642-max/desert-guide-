@@ -21,7 +21,6 @@
       --blue: #0284c7;
       --purple: #7c3aed;
       --teal: #0d9488;
-      --amber: #d97706;
       --red: #dc2626;
     }
 
@@ -37,7 +36,7 @@
     }
 
     .app {
-      max-width: 560px;
+      max-width: 520px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
@@ -48,23 +47,22 @@
       background: var(--accent);
       color: #fff;
       text-align: center;
-      padding: 14px;
+      padding: 13px;
       border-radius: 12px;
       font-weight: 700;
-      font-size: 19px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+      font-size: 18px;
     }
 
     .status-box {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 12px;
+      padding: 11px;
       text-align: center;
     }
 
     .status-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       color: #4ade80;
       margin-bottom: 4px;
@@ -79,7 +77,7 @@
     }
 
     .sub-meta {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--muted);
       margin-top: 4px;
     }
@@ -88,38 +86,43 @@
       width: 100%;
       border: none;
       border-radius: 11px;
-      padding: 13px 14px;
-      font-size: 15px;
+      padding: 12px 10px;
+      font-size: 14px;
       font-weight: 700;
       color: #fff;
       cursor: pointer;
       transition: transform 0.08s ease, opacity 0.15s ease;
     }
 
-    .btn:active { transform: scale(0.99); opacity: 0.92; }
+    .btn:active { transform: scale(0.98); opacity: 0.92; }
 
     .btn-green { background: var(--green); }
     .btn-blue { background: var(--blue); }
     .btn-purple { background: var(--purple); }
     .btn-orange { background: var(--accent); }
     .btn-teal { background: var(--teal); }
-    .btn-amber { background: var(--amber); }
     .btn-red { background: var(--red); }
     .btn-dark { background: #1e293b; border: 1px solid var(--border); }
 
     .row-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      gap: 8px;
+    }
+
+    .row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
     }
 
     .saved-car-box {
       background: var(--card-2);
       border: 1px dashed #334155;
       border-radius: 10px;
-      padding: 9px 12px;
+      padding: 8px 10px;
       text-align: center;
-      font-size: 13px;
+      font-size: 12px;
       color: var(--muted);
     }
 
@@ -134,38 +137,45 @@
       background: var(--card);
       border: 1.5px solid var(--accent);
       border-radius: 14px;
-      padding: 16px;
+      padding: 14px;
       text-align: center;
       display: none;
     }
 
-    .tool-panel { border-color: var(--border); text-align: right; }
-    .nav-panel.show, .tool-panel.show { display: block; }
+    .tool-panel {
+      border-color: var(--border);
+      text-align: right;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-panel.show { display: block; }
+    .tool-panel.show { display: flex; }
 
     .direction-badge {
       display: inline-block;
       background: rgba(234, 88, 12, 0.2);
       border: 1px solid var(--accent);
       color: #fdba74;
-      padding: 6px 14px;
+      padding: 5px 13px;
       border-radius: 999px;
       font-weight: 700;
-      font-size: 14px;
-      margin-bottom: 14px;
+      font-size: 13px;
+      margin-bottom: 12px;
     }
 
     .visual-row {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 18px;
+      gap: 16px;
       flex-wrap: wrap;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .arrow-box {
-      width: 104px;
-      height: 104px;
+      width: 96px;
+      height: 96px;
       background: var(--card-2);
       border: 1px solid var(--border);
       border-radius: 14px;
@@ -177,7 +187,7 @@
     }
 
     .arrow-icon {
-      font-size: 42px;
+      font-size: 38px;
       line-height: 1;
       color: #38bdf8;
       display: inline-block;
@@ -196,49 +206,42 @@
     }
 
     .target-name {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 800;
-      margin: 4px 0;
+      margin: 2px 0;
     }
 
     .target-note {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--muted);
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .distance-val {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 800;
       color: #4ade80;
     }
 
     .bearing-val {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--muted);
       margin-top: 4px;
     }
 
     .alert-banner {
-      margin-top: 10px;
-      padding: 8px 12px;
+      margin-top: 8px;
+      padding: 8px 10px;
       border-radius: 9px;
       background: rgba(34, 197, 94, 0.18);
       border: 1px solid #22c55e;
       color: #86efac;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       display: none;
     }
 
     .alert-banner.show { display: block; }
-
-    .mini-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 4px;
-    }
 
     .mini-btn {
       padding: 9px 10px;
@@ -252,30 +255,35 @@
       color: var(--text);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 10px;
+      padding: 9px 10px;
       font-family: inherit;
       font-size: 13px;
-      margin-bottom: 8px;
+      margin: 0;
     }
 
     textarea.sos-box {
-      min-height: 115px;
+      min-height: 105px;
       line-height: 1.5;
       resize: vertical;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
     }
 
     .history-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      margin-top: 8px;
+      gap: 6px;
     }
 
     .history-item {
       background: var(--card-2);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 9px 11px;
+      border-radius: 9px;
+      padding: 8px 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -292,12 +300,12 @@
 
     .history-actions {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       flex-shrink: 0;
     }
 
     .tiny-btn {
-      padding: 6px 8px;
+      padding: 5px 8px;
       font-size: 11px;
       border-radius: 7px;
       width: auto;
@@ -311,77 +319,33 @@
     <div class="status-box">
       <div class="status-title" id="gpsStatus">جاهز — اضغطي تحديث موقعي الآن</div>
       <div class="coords-text" id="currentCoords">--.-----, --.-----</div>
-      <div class="sub-meta" id="gpsAccuracy">الدقة: غير محددة | البوصلة: بانتظار التفعيل</div>
-      <div class="sub-meta" id="offlineDataMeta">النقاط المحفوظة بدون نت: جاري التحقق...</div>
+      <div class="sub-meta" id="gpsAccuracy">الدقة: غير محددة | البوصلة: تلقائية</div>
     </div>
 
     <div class="row-2">
-      <button class="btn btn-green" id="btnUpdateGps">تحديث موقعي (GPS)</button>
-      <button class="btn btn-amber" id="btnEnableCompass">تفعيل البوصلة</button>
+      <button class="btn btn-green" id="btnUpdateGps">تحديث موقعي</button>
+      <button class="btn btn-blue" id="btnLiveTrack">التتبع الحي: متوقف</button>
     </div>
 
-    <button class="btn btn-blue" id="btnLiveTrack">التتبع الحي عند الحركة: متوقف (اضغطي للتشغيل)</button>
-
     <div class="row-2">
-      <button class="btn btn-dark" id="btnSaveCar">حفظ موقع السيارة</button>
+      <button class="btn btn-dark" id="btnSaveCar">حفظ السيارة</button>
       <button class="btn btn-purple" id="btnGoCar">العودة للسيارة</button>
     </div>
 
-    <div class="saved-car-box" id="savedCarInfo">لم يتم حفظ موقع سيارة أو مخيم بعد</div>
+    <div class="saved-car-box" id="savedCarInfo">لم يتم حفظ موقع سيارة بعد</div>
 
-    <button class="btn btn-orange" data-category="road">أقرب طريق</button>
-    <button class="btn btn-blue" data-category="station">أقرب محطة وقود</button>
-    <button class="btn btn-teal" data-category="safety">أقرب نقطة أمان</button>
-
-    <div class="row-2">
-      <button class="btn btn-green" id="btnToggleAddPoint">+ إضافة طريق / نقطة</button>
-      <button class="btn btn-dark" id="btnToggleHistory">سجل المواقع المحفوظة</button>
+    <div class="row-3">
+      <button class="btn btn-orange" data-category="road">أقرب طريق</button>
+      <button class="btn btn-blue" data-category="station">أقرب محطة</button>
+      <button class="btn btn-teal" data-category="safety">أقرب أمان</button>
     </div>
 
     <div class="row-2">
-      <button class="btn btn-red" id="btnPrepareSos">تجهيز رسالة موقعي</button>
-      <button class="btn btn-dark" id="btnDownloadArea">تحميل بيانات المنطقة (15 كم)</button>
+      <button class="btn btn-red" id="btnPrepareSos">رسالة موقعي</button>
+      <button class="btn btn-dark" id="btnToggleTools">أدوات إضافية ▾</button>
     </div>
 
-    <div class="mini-actions">
-      <button class="btn btn-dark mini-btn" id="btnCopyCoords">نسخ الإحداثيات الحالية</button>
-      <button class="btn btn-dark mini-btn" id="btnClearCar">مسح موقع السيارة</button>
-    </div>
-
-    <div class="tool-panel" id="addPointPanel">
-      <div class="target-name" style="font-size:15px; margin-bottom:8px;">إضافة طريق أو نقطة بإحداثيات دقيقة</div>
-      <input class="field-input" id="newPointName" type="text" placeholder="اسم الطريق أو النقطة (مثال: مدخل طريق خريص)" />
-      <select class="field-input" id="newPointCat">
-        <option value="road">تصنيف: طريق</option>
-        <option value="station">تصنيف: محطة وقود</option>
-        <option value="safety">تصنيف: نقطة أمان</option>
-      </select>
-      <input class="field-input" id="newPointCoords" type="text" dir="ltr" placeholder="الإحداثيات: 24.7136, 46.6753" />
-      <div class="row-2">
-        <button class="btn btn-green mini-btn" id="btnSaveNewPoint">حفظ النقطة</button>
-        <button class="btn btn-dark mini-btn" id="btnUseCurrentForPoint">استخدام موقعي الحالي</button>
-      </div>
-      <div class="history-list" id="customPointsList"></div>
-    </div>
-
-    <div class="tool-panel" id="sosPanel">
-      <div class="target-name" style="font-size:15px; margin-bottom:8px;">رسالة الموقع للمرافقين / الطوارئ</div>
-      <textarea class="sos-box" id="sosText" readonly></textarea>
-      <div class="row-2">
-        <button class="btn btn-green mini-btn" id="btnCopySos">نسخ الرسالة</button>
-        <button class="btn btn-blue mini-btn" id="btnShareSos">مشاركة / إرسال</button>
-      </div>
-    </div>
-
-    <div class="tool-panel" id="historyPanel">
-      <div class="row-2" style="align-items:center; margin-bottom:6px;">
-        <div class="target-name" style="font-size:15px; margin:0;">سجل آخر المواقع</div>
-        <button class="btn btn-dark tiny-btn" style="justify-self:end;" id="btnClearHistory">مسح السجل</button>
-      </div>
-      <div class="sub-meta">يُحفظ تلقائيًا عند قراءة الموقع ليكون مرجعًا في حال انقطاع الاتصال</div>
-      <div class="history-list" id="historyList"></div>
-    </div>
-
+    <!-- لوحة الرادار والتوجيه -->
     <div class="nav-panel" id="navPanel">
       <div class="direction-badge" id="directionBadge">الاتجاه: --</div>
 
@@ -390,7 +354,7 @@
           <span class="arrow-icon" id="arrowIcon">↑</span>
           <span class="arrow-label">سهم الطريق</span>
         </div>
-        <canvas id="radar" width="160" height="160"></canvas>
+        <canvas id="radar" width="150" height="150"></canvas>
       </div>
 
       <div class="target-name" id="targetName">--</div>
@@ -398,6 +362,50 @@
       <div class="distance-val" id="distanceVal">المسافة المباشرة: -- كم</div>
       <div class="bearing-val" id="bearingVal">زاوية الوجهة: --° | التفافك: --°</div>
       <div class="alert-banner" id="alertBanner">أنتِ قريبة جدًا من الوجهة (أقل من 30 مترًا)!</div>
+    </div>
+
+    <!-- لوحة رسالة الموقع -->
+    <div class="tool-panel" id="sosPanel">
+      <div style="font-size:14px; font-weight:700;">رسالة الموقع للمرافقين / الطوارئ</div>
+      <textarea class="sos-box" id="sosText" readonly></textarea>
+      <div class="row-2">
+        <button class="btn btn-green mini-btn" id="btnCopySos">نسخ الرسالة</button>
+        <button class="btn btn-blue mini-btn" id="btnShareSos">مشاركة / إرسال</button>
+      </div>
+    </div>
+
+    <!-- لوحة الأدوات الإضافية المطوية -->
+    <div class="tool-panel" id="toolsPanel">
+      <div class="sub-meta" id="offlineDataMeta">متاح بدون نت: جاري التحقق...</div>
+
+      <div class="row-2">
+        <button class="btn btn-dark mini-btn" id="btnDownloadArea">تحميل بيانات (15 كم)</button>
+        <button class="btn btn-dark mini-btn" id="btnCopyCoords">نسخ الإحداثيات</button>
+      </div>
+
+      <div class="row-2">
+        <button class="btn btn-dark mini-btn" id="btnClearCar">مسح موقع السيارة</button>
+        <button class="btn btn-dark mini-btn" id="btnClearHistory">مسح سجل المواقع</button>
+      </div>
+
+      <div class="divider"></div>
+      <div style="font-size:13px; font-weight:700;">إضافة طريق أو نقطة بإحداثيات دقيقة</div>
+      <input class="field-input" id="newPointName" type="text" placeholder="اسم الطريق أو النقطة" />
+      <div class="row-2">
+        <select class="field-input" id="newPointCat">
+          <option value="road">طريق</option>
+          <option value="station">محطة وقود</option>
+          <option value="safety">نقطة أمان</option>
+        </select>
+        <button class="btn btn-dark mini-btn" id="btnUseCurrentForPoint">موقعي الحالي</button>
+      </div>
+      <input class="field-input" id="newPointCoords" type="text" dir="ltr" placeholder="24.7136, 46.6753" />
+      <button class="btn btn-green mini-btn" id="btnSaveNewPoint">حفظ النقطة</button>
+      <div class="history-list" id="customPointsList"></div>
+
+      <div class="divider"></div>
+      <div style="font-size:13px; font-weight:700;">سجل آخر المواقع</div>
+      <div class="history-list" id="historyList"></div>
     </div>
   </div>
 
@@ -440,18 +448,16 @@
     const gpsAccuracyEl = document.getElementById("gpsAccuracy");
     const offlineDataMetaEl = document.getElementById("offlineDataMeta");
     const btnUpdateGps = document.getElementById("btnUpdateGps");
-    const btnEnableCompass = document.getElementById("btnEnableCompass");
     const btnLiveTrack = document.getElementById("btnLiveTrack");
     const btnSaveCar = document.getElementById("btnSaveCar");
     const btnGoCar = document.getElementById("btnGoCar");
-    const btnToggleAddPoint = document.getElementById("btnToggleAddPoint");
     const btnPrepareSos = document.getElementById("btnPrepareSos");
-    const btnToggleHistory = document.getElementById("btnToggleHistory");
+    const btnToggleTools = document.getElementById("btnToggleTools");
+    const toolsPanelEl = document.getElementById("toolsPanel");
     const btnDownloadArea = document.getElementById("btnDownloadArea");
     const btnCopyCoords = document.getElementById("btnCopyCoords");
     const btnClearCar = document.getElementById("btnClearCar");
     const savedCarInfoEl = document.getElementById("savedCarInfo");
-    const addPointPanelEl = document.getElementById("addPointPanel");
     const newPointNameEl = document.getElementById("newPointName");
     const newPointCatEl = document.getElementById("newPointCat");
     const newPointCoordsEl = document.getElementById("newPointCoords");
@@ -462,7 +468,6 @@
     const sosTextEl = document.getElementById("sosText");
     const btnCopySos = document.getElementById("btnCopySos");
     const btnShareSos = document.getElementById("btnShareSos");
-    const historyPanelEl = document.getElementById("historyPanel");
     const historyListEl = document.getElementById("historyList");
     const btnClearHistory = document.getElementById("btnClearHistory");
     const navPanelEl = document.getElementById("navPanel");
@@ -558,17 +563,17 @@
 
     function renderHistoryList() {
       if (!locationHistory.length) {
-        historyListEl.innerHTML = `<div class="sub-meta">لا توجد مواقع مسجلة في السجل بعد.</div>`;
+        historyListEl.innerHTML = `<div class="sub-meta">لا توجد مواقع مسجلة بعد.</div>`;
         return;
       }
       historyListEl.innerHTML = "";
-      locationHistory.forEach((item, idx) => {
+      locationHistory.slice(0, 6).forEach((item, idx) => {
         const row = document.createElement("div");
         row.className = "history-item";
         row.innerHTML = `
           <div>
             <div class="history-coords">${item.lat.toFixed(5)}, ${item.lng.toFixed(5)}</div>
-            <div class="sub-meta" style="margin-top:2px;">${formatTimeLabel(item.time)} • دقة ±${item.accuracy || 0}م</div>
+            <div class="sub-meta" style="margin-top:2px;">${formatTimeLabel(item.time)}</div>
           </div>
           <div class="history-actions">
             <button class="btn btn-purple tiny-btn" data-go-idx="${idx}">توجيه</button>
@@ -607,7 +612,7 @@
 
     function renderCustomPointsList() {
       if (!customPoints.length) {
-        customPointsListEl.innerHTML = `<div class="sub-meta">لم تضفي نقاطًا مخصصة بعد.</div>`;
+        customPointsListEl.innerHTML = "";
         return;
       }
       customPointsListEl.innerHTML = "";
@@ -654,7 +659,7 @@
       const stationCount = (areaPoints?.station?.length || 0) + customPoints.filter(p => p.category === "station").length;
       const safetyCount = (areaPoints?.safety?.length || 0) + customPoints.filter(p => p.category === "safety").length;
       offlineDataMetaEl.textContent =
-        `متاح بدون نت: ${roadCount} طريق، ${stationCount} محطة، ${safetyCount} نقطة أمان (إضافة إلى ${customPoints.length} نقطة مضافة)`;
+        `متاح بدون نت: ${roadCount} طريق، ${stationCount} محطة، ${safetyCount} أمان`;
     }
 
     function renderSavedCarStatus() {
@@ -663,7 +668,7 @@
         savedCarInfoEl.innerHTML = `السيارة محفوظة: <span dir="ltr">${savedCar.lat.toFixed(5)}, ${savedCar.lng.toFixed(5)}</span>`;
       } else {
         savedCarInfoEl.classList.remove("active");
-        savedCarInfoEl.textContent = "لم يتم حفظ موقع سيارة أو مخيم بعد";
+        savedCarInfoEl.textContent = "لم يتم حفظ موقع سيارة بعد";
       }
     }
 
@@ -716,7 +721,7 @@
       const accText = currentPos ? `±${Math.round(currentPos.accuracy || 0)} م` : "غير محددة";
       const compText = typeof deviceHeading === "number"
         ? `نشطة (${Math.round(deviceHeading)}°)`
-        : (compassActive ? "بانتظار حركة الجهاز..." : "بانتظار التفعيل");
+        : "تلقائية";
       gpsAccuracyEl.textContent = `الدقة: ${accText} | البوصلة: ${compText}`;
     }
 
@@ -735,28 +740,22 @@
       }
     }
 
-    function requestCompassPermission() {
+    function ensureCompassActive() {
+      if (compassActive) return;
       if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
         DeviceOrientationEvent.requestPermission()
           .then((state) => {
             if (state === "granted") {
               compassActive = true;
-              btnEnableCompass.textContent = "البوصلة مفعلة";
               window.addEventListener("deviceorientation", handleOrientation, true);
               updateAccuracyAndCompassLine();
-            } else {
-              gpsStatusEl.textContent = "تم رفض إذن البوصلة من المتصفح";
             }
           })
-          .catch(() => {
-            gpsStatusEl.textContent = "تعذر طلب إذن البوصلة";
-          });
+          .catch(() => {});
       } else {
         compassActive = true;
-        btnEnableCompass.textContent = "البوصلة مفعلة";
         window.addEventListener("deviceorientation", handleOrientation, true);
         window.addEventListener("deviceorientationabsolute", handleOrientation, true);
-        updateAccuracyAndCompassLine();
       }
     }
 
@@ -768,7 +767,6 @@
       return 0;
     }
 
-    // رسم الرادار: يدور مع التفاف الشخص ويعرض النقطة فقط (بدون خط أثر)
     function drawRadarDotOnly(relativeBearingDeg, distMeters, userHeadingDeg) {
       const w = radarCanvas.width;
       const h = radarCanvas.height;
@@ -815,7 +813,6 @@
       rCtx.arc(cx, cy, 4.5, 0, Math.PI * 2);
       rCtx.fill();
 
-      // النقطة فقط (بدون خط أثر)
       const normalizedDist = Math.min(distMeters / 2000, 1);
       const rDot = Math.max(normalizedDist * (maxR - 8), 12);
       const rad = toRad(relativeBearingDeg);
@@ -942,9 +939,11 @@
       return { lat, lng };
     }
 
-    btnToggleAddPoint.addEventListener("click", () => {
+    btnToggleTools.addEventListener("click", () => {
       renderCustomPointsList();
-      addPointPanelEl.classList.toggle("show");
+      renderHistoryList();
+      const open = toolsPanelEl.classList.toggle("show");
+      btnToggleTools.textContent = open ? "إخفاء الأدوات ▴" : "أدوات إضافية ▾";
     });
 
     btnUseCurrentForPoint.addEventListener("click", () => {
@@ -972,7 +971,7 @@
       }
 
       customPoints = [
-        { name, note: "نقطة مضافة يدويًا — محفوظة بدون نت", category, lat: parsed.lat, lng: parsed.lng },
+        { name, note: "نقطة مضافة — محفوظة بدون نت", category, lat: parsed.lat, lng: parsed.lng },
         ...customPoints
       ];
       persistCustomPoints(customPoints);
@@ -986,7 +985,7 @@
     function buildSosMessage() {
       const ref = currentPos || savedCar || locationHistory[0];
       if (!ref) {
-        return "لا توجد إحداثيات متاحة حاليًا. اضغطي تحديث موقعي (GPS) أولًا.";
+        return "لا توجد إحداثيات متاحة حاليًا. اضغطي تحديث موقعي أولًا.";
       }
       const lat = ref.lat.toFixed(6);
       const lng = ref.lng.toFixed(6);
@@ -1005,7 +1004,7 @@
     btnPrepareSos.addEventListener("click", () => {
       const openSos = () => {
         sosTextEl.value = buildSosMessage();
-        sosPanelEl.classList.add("show");
+        sosPanelEl.classList.toggle("show");
       };
       if (!currentPos) requestCurrentPosition(openSos);
       else openSos();
@@ -1027,11 +1026,6 @@
       }
       try { await navigator.clipboard.writeText(txt); } catch (e) {}
       gpsStatusEl.textContent = "تم نسخ الرسالة للصقها وإرسالها";
-    });
-
-    btnToggleHistory.addEventListener("click", () => {
-      renderHistoryList();
-      historyPanelEl.classList.toggle("show");
     });
 
     btnClearHistory.addEventListener("click", () => {
@@ -1079,7 +1073,7 @@
         const lat = posObj.lat;
         const lng = posObj.lng;
         const radiusMeters = 15000;
-        gpsStatusEl.textContent = "جاري تحميل بيانات المنطقة (نطاق 15 كم)...";
+        gpsStatusEl.textContent = "جاري تحميل بيانات المنطقة (15 كم)...";
 
         const query = `
           [out:json][timeout:18];
@@ -1104,7 +1098,7 @@
         }
 
         if (!data) {
-          gpsStatusEl.textContent = "تعذر تحميل بيانات المنطقة الآن — أضيفي نقاطكِ يدويًا أو جرّبي لاحقًا";
+          gpsStatusEl.textContent = "تعذر التحميل الآن — أضيفي نقاطكِ يدويًا أو جرّبي لاحقًا";
           return;
         }
 
@@ -1164,10 +1158,9 @@
     }
 
     btnDownloadArea.addEventListener("click", downloadAreaDataForOffline);
-    btnEnableCompass.addEventListener("click", requestCompassPermission);
 
     btnUpdateGps.addEventListener("click", () => {
-      if (!compassActive) requestCompassPermission();
+      ensureCompassActive();
       requestCurrentPosition();
     });
 
@@ -1176,12 +1169,12 @@
         gpsStatusEl.textContent = "المتصفح لا يدعم التتبع الحي";
         return;
       }
-      if (!compassActive) requestCompassPermission();
+      ensureCompassActive();
 
       if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
-        btnLiveTrack.textContent = "التتبع الحي عند الحركة: متوقف (اضغطي للتشغيل)";
+        btnLiveTrack.textContent = "التتبع الحي: متوقف";
         gpsStatusEl.textContent = "تم إيقاف التتبع الحي";
       } else {
         watchId = navigator.geolocation.watchPosition(
@@ -1189,7 +1182,7 @@
           handleGpsError,
           { enableHighAccuracy: true, timeout: 15000, maximumAge: 2000 }
         );
-        btnLiveTrack.textContent = "التتبع الحي عند الحركة: نشط (اضغطي للإيقاف)";
+        btnLiveTrack.textContent = "التتبع الحي: نشط";
         gpsStatusEl.textContent = "تتبع حي نشط — يتحدث مع حركتك";
       }
     });
@@ -1208,10 +1201,10 @@
 
     btnGoCar.addEventListener("click", () => {
       if (!savedCar) {
-        gpsStatusEl.textContent = "احفظي موقع السيارة أولًا قبل الضغط على العودة للسيارة";
+        gpsStatusEl.textContent = "احفظي موقع السيارة أولًا";
         return;
       }
-      if (!compassActive) requestCompassPermission();
+      ensureCompassActive();
       activeTarget = {
         name: "موقع السيارة المحفوظ",
         note: "العودة المباشرة إلى السيارة",
@@ -1248,7 +1241,7 @@
 
     document.querySelectorAll("[data-category]").forEach((btn) => {
       btn.addEventListener("click", () => {
-        if (!compassActive) requestCompassPermission();
+        ensureCompassActive();
         const cat = btn.getAttribute("data-category");
         const best = findNearestPoint(cat);
         if (!best) return;
