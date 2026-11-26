@@ -246,9 +246,8 @@
       border-radius: 9px;
     }
 
-    textarea.sos-box {
+    textarea.sos-box, input.field-input, select.field-input {
       width: 100%;
-      min-height: 115px;
       background: var(--card-2);
       color: var(--text);
       border: 1px solid var(--border);
@@ -256,8 +255,12 @@
       padding: 10px;
       font-family: inherit;
       font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    textarea.sos-box {
+      min-height: 115px;
       line-height: 1.5;
-      margin-bottom: 10px;
       resize: vertical;
     }
 
@@ -309,7 +312,7 @@
       <div class="status-title" id="gpsStatus">جاهز — اضغطي تحديث موقعي الآن</div>
       <div class="coords-text" id="currentCoords">--.-----, --.-----</div>
       <div class="sub-meta" id="gpsAccuracy">الدقة: غير محددة | البوصلة: بانتظار التفعيل</div>
-      <div class="sub-meta" id="offlineDataMeta">بيانات المنطقة المحفوظة: غير محمّلة (تعمل النقاط الافتراضية)</div>
+      <div class="sub-meta" id="offlineDataMeta">النقاط المحفوظة بدون نت: جاري التحقق...</div>
     </div>
 
     <div class="row-2">
@@ -331,15 +334,34 @@
     <button class="btn btn-teal" data-category="safety">أقرب نقطة أمان</button>
 
     <div class="row-2">
-      <button class="btn btn-red" id="btnPrepareSos">تجهيز رسالة موقعي</button>
+      <button class="btn btn-green" id="btnToggleAddPoint">+ إضافة طريق / نقطة</button>
       <button class="btn btn-dark" id="btnToggleHistory">سجل المواقع المحفوظة</button>
     </div>
 
-    <button class="btn btn-dark" id="btnDownloadArea">تحميل بيانات الطرق والمحطات للمنطقة (يحتاج نت مرة واحدة)</button>
+    <div class="row-2">
+      <button class="btn btn-red" id="btnPrepareSos">تجهيز رسالة موقعي</button>
+      <button class="btn btn-dark" id="btnDownloadArea">تحميل بيانات المنطقة (15 كم)</button>
+    </div>
 
     <div class="mini-actions">
       <button class="btn btn-dark mini-btn" id="btnCopyCoords">نسخ الإحداثيات الحالية</button>
       <button class="btn btn-dark mini-btn" id="btnClearCar">مسح موقع السيارة</button>
+    </div>
+
+    <div class="tool-panel" id="addPointPanel">
+      <div class="target-name" style="font-size:15px; margin-bottom:8px;">إضافة طريق أو نقطة بإحداثيات دقيقة</div>
+      <input class="field-input" id="newPointName" type="text" placeholder="اسم الطريق أو النقطة (مثال: مدخل طريق خريص)" />
+      <select class="field-input" id="newPointCat">
+        <option value="road">تصنيف: طريق</option>
+        <option value="station">تصنيف: محطة وقود</option>
+        <option value="safety">تصنيف: نقطة أمان</option>
+      </select>
+      <input class="field-input" id="newPointCoords" type="text" dir="ltr" placeholder="الإحداثيات: 24.7136, 46.6753" />
+      <div class="row-2">
+        <button class="btn btn-green mini-btn" id="btnSaveNewPoint">حفظ النقطة</button>
+        <button class="btn btn-dark mini-btn" id="btnUseCurrentForPoint">استخدام موقعي الحالي</button>
+      </div>
+      <div class="history-list" id="customPointsList"></div>
     </div>
 
     <div class="tool-panel" id="sosPanel">
@@ -380,14 +402,14 @@
   </div>
 
   <script>
-    const STORAGE_KEY_CAR = "desert_guide_saved_car_v4";
-    const STORAGE_KEY_AREA = "desert_guide_area_points_v1";
+    const STORAGE_KEY_CAR = "desert_guide_saved_car_v5";
+    const STORAGE_KEY_AREA = "desert_guide_area_points_v2";
+    const STORAGE_KEY_CUSTOM = "desert_guide_custom_points_v1";
     const STORAGE_KEY_HISTORY = "desert_guide_location_history_v1";
 
     const DEFAULT_POINTS = {
       road: [
-        { name: "طريق الثمامة الرئيسي", note: "مسار رئيسي قريب من الثمامة", lat: 25.0550, lng: 46.7650 },
-        { name: "طريق المطار / طريق خريص", note: "طريق معبّد رئيسي", lat: 24.7860, lng: 46.6750 }
+        { name: "طريق الثمامة الرئيسي", note: "مسار رئيسي قريب من الثمامة", lat: 25.0550, lng: 46.7650 }
       ],
       station: [
         { name: "محطة الدريس - مخرج الثمامة", note: "وقود وبنشر", lat: 25.0985, lng: 46.7310 }
@@ -405,6 +427,7 @@
     let currentPos = null;
     let savedCar = loadSavedCar();
     let areaPoints = loadAreaPoints();
+    let customPoints = loadCustomPoints();
     let locationHistory = loadLocationHistory();
     let activeTarget = null;
     let watchId = null;
@@ -421,12 +444,20 @@
     const btnLiveTrack = document.getElementById("btnLiveTrack");
     const btnSaveCar = document.getElementById("btnSaveCar");
     const btnGoCar = document.getElementById("btnGoCar");
+    const btnToggleAddPoint = document.getElementById("btnToggleAddPoint");
     const btnPrepareSos = document.getElementById("btnPrepareSos");
     const btnToggleHistory = document.getElementById("btnToggleHistory");
     const btnDownloadArea = document.getElementById("btnDownloadArea");
     const btnCopyCoords = document.getElementById("btnCopyCoords");
     const btnClearCar = document.getElementById("btnClearCar");
     const savedCarInfoEl = document.getElementById("savedCarInfo");
+    const addPointPanelEl = document.getElementById("addPointPanel");
+    const newPointNameEl = document.getElementById("newPointName");
+    const newPointCatEl = document.getElementById("newPointCat");
+    const newPointCoordsEl = document.getElementById("newPointCoords");
+    const btnSaveNewPoint = document.getElementById("btnSaveNewPoint");
+    const btnUseCurrentForPoint = document.getElementById("btnUseCurrentForPoint");
+    const customPointsListEl = document.getElementById("customPointsList");
     const sosPanelEl = document.getElementById("sosPanel");
     const sosTextEl = document.getElementById("sosText");
     const btnCopySos = document.getElementById("btnCopySos");
@@ -474,6 +505,20 @@
 
     function persistAreaPoints(data) {
       try { localStorage.setItem(STORAGE_KEY_AREA, JSON.stringify(data)); } catch (e) {}
+    }
+
+    function loadCustomPoints() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_CUSTOM);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {}
+      return [];
+    }
+
+    function persistCustomPoints(list) {
+      try { localStorage.setItem(STORAGE_KEY_CUSTOM, JSON.stringify(list)); } catch (e) {}
     }
 
     function loadLocationHistory() {
@@ -560,14 +605,56 @@
       });
     }
 
-    function renderOfflineDataStatus() {
-      if (!areaPoints) {
-        offlineDataMetaEl.textContent = "بيانات المنطقة المحفوظة: غير محمّلة (تعمل النقاط الافتراضية)";
+    function renderCustomPointsList() {
+      if (!customPoints.length) {
+        customPointsListEl.innerHTML = `<div class="sub-meta">لم تضفي نقاطًا مخصصة بعد.</div>`;
         return;
       }
-      const total = (areaPoints.road?.length || 0) + (areaPoints.station?.length || 0) + (areaPoints.safety?.length || 0);
+      customPointsListEl.innerHTML = "";
+      customPoints.forEach((pt, idx) => {
+        const row = document.createElement("div");
+        row.className = "history-item";
+        row.innerHTML = `
+          <div>
+            <div style="font-weight:700;">${pt.name}</div>
+            <div class="history-coords">${pt.lat.toFixed(5)}, ${pt.lng.toFixed(5)}</div>
+          </div>
+          <div class="history-actions">
+            <button class="btn btn-purple tiny-btn" data-pt-go="${idx}">توجيه</button>
+            <button class="btn btn-dark tiny-btn" data-pt-del="${idx}">حذف</button>
+          </div>
+        `;
+        customPointsListEl.appendChild(row);
+      });
+
+      customPointsListEl.querySelectorAll("[data-pt-go]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const pt = customPoints[Number(btn.getAttribute("data-pt-go"))];
+          if (!pt) return;
+          activeTarget = { ...pt };
+          arrivalAlertShown = false;
+          if (!currentPos) requestCurrentPosition(() => updateNavigationUI());
+          else updateNavigationUI();
+        });
+      });
+
+      customPointsListEl.querySelectorAll("[data-pt-del]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const idx = Number(btn.getAttribute("data-pt-del"));
+          customPoints.splice(idx, 1);
+          persistCustomPoints(customPoints);
+          renderCustomPointsList();
+          renderOfflineDataStatus();
+        });
+      });
+    }
+
+    function renderOfflineDataStatus() {
+      const roadCount = (areaPoints?.road?.length || 0) + customPoints.filter(p => p.category === "road").length;
+      const stationCount = (areaPoints?.station?.length || 0) + customPoints.filter(p => p.category === "station").length;
+      const safetyCount = (areaPoints?.safety?.length || 0) + customPoints.filter(p => p.category === "safety").length;
       offlineDataMetaEl.textContent =
-        `محفوظ بدون نت: ${areaPoints.road.length} طريق، ${areaPoints.station.length} محطة، ${areaPoints.safety.length} نقطة أمان (${total} نقطة)`;
+        `متاح بدون نت: ${roadCount} طريق، ${stationCount} محطة، ${safetyCount} نقطة أمان (إضافة إلى ${customPoints.length} نقطة مضافة)`;
     }
 
     function renderSavedCarStatus() {
@@ -843,6 +930,59 @@
       );
     }
 
+    function parseCoordsInput(str) {
+      if (!str) return null;
+      const matches = str.match(/-?\d+(?:\.\d+)?/g);
+      if (!matches || matches.length < 2) return null;
+      const lat = parseFloat(matches[0]);
+      const lng = parseFloat(matches[1]);
+      if (Number.isNaN(lat) || Number.isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        return null;
+      }
+      return { lat, lng };
+    }
+
+    btnToggleAddPoint.addEventListener("click", () => {
+      renderCustomPointsList();
+      addPointPanelEl.classList.toggle("show");
+    });
+
+    btnUseCurrentForPoint.addEventListener("click", () => {
+      if (currentPos) {
+        newPointCoordsEl.value = `${currentPos.lat.toFixed(5)}, ${currentPos.lng.toFixed(5)}`;
+      } else {
+        requestCurrentPosition((posObj) => {
+          if (posObj) newPointCoordsEl.value = `${posObj.lat.toFixed(5)}, ${posObj.lng.toFixed(5)}`;
+        });
+      }
+    });
+
+    btnSaveNewPoint.addEventListener("click", () => {
+      const name = (newPointNameEl.value || "").trim();
+      const category = newPointCatEl.value || "road";
+      const parsed = parseCoordsInput(newPointCoordsEl.value);
+
+      if (!name) {
+        gpsStatusEl.textContent = "اكتبي اسم الطريق أو النقطة أولًا";
+        return;
+      }
+      if (!parsed) {
+        gpsStatusEl.textContent = "أدخلي إحداثيات صحيحة مثل: 24.7136, 46.6753";
+        return;
+      }
+
+      customPoints = [
+        { name, note: "نقطة مضافة يدويًا — محفوظة بدون نت", category, lat: parsed.lat, lng: parsed.lng },
+        ...customPoints
+      ];
+      persistCustomPoints(customPoints);
+      newPointNameEl.value = "";
+      newPointCoordsEl.value = "";
+      renderCustomPointsList();
+      renderOfflineDataStatus();
+      gpsStatusEl.textContent = `تم حفظ "${name}" للعمل بدون نت`;
+    });
+
     function buildSosMessage() {
       const ref = currentPos || savedCar || locationHistory[0];
       if (!ref) {
@@ -867,11 +1007,8 @@
         sosTextEl.value = buildSosMessage();
         sosPanelEl.classList.add("show");
       };
-      if (!currentPos) {
-        requestCurrentPosition(openSos);
-      } else {
-        openSos();
-      }
+      if (!currentPos) requestCurrentPosition(openSos);
+      else openSos();
     });
 
     btnCopySos.addEventListener("click", async () => {
@@ -903,11 +1040,20 @@
       renderHistoryList();
     });
 
+    function getCategoryCandidates(category) {
+      const customForCat = customPoints
+        .filter((p) => p.category === category)
+        .map((p) => ({ name: p.name, note: p.note, lat: p.lat, lng: p.lng }));
+      const downloadedForCat = (areaPoints && Array.isArray(areaPoints[category])) ? areaPoints[category] : [];
+      const fallbackForCat = DEFAULT_POINTS[category] || [];
+
+      if (customForCat.length) return [...customForCat, ...downloadedForCat];
+      if (downloadedForCat.length) return downloadedForCat;
+      return fallbackForCat;
+    }
+
     function findNearestPoint(category) {
-      const source = areaPoints || DEFAULT_POINTS;
-      const list = (source[category] && source[category].length > 0)
-        ? source[category]
-        : (DEFAULT_POINTS[category] || []);
+      const list = getCategoryCandidates(category);
       if (!list.length) return null;
       if (!currentPos) return list[0];
 
@@ -925,25 +1071,25 @@
 
     async function downloadAreaDataForOffline() {
       if (!navigator.onLine) {
-        gpsStatusEl.textContent = "لا يوجد اتصال بالإنترنت حاليًا — يتم استخدام البيانات المحفوظة";
+        gpsStatusEl.textContent = "لا يوجد اتصال بالإنترنت حاليًا — يتم استخدام النقاط المحفوظة";
         return;
       }
 
       const startDownload = async (posObj) => {
         const lat = posObj.lat;
         const lng = posObj.lng;
-        const radiusMeters = 35000;
-        gpsStatusEl.textContent = "جاري تحميل بيانات الطرق والمحطات من المنطقة...";
+        const radiusMeters = 15000;
+        gpsStatusEl.textContent = "جاري تحميل بيانات المنطقة (نطاق 15 كم)...";
 
         const query = `
-          [out:json][timeout:25];
+          [out:json][timeout:18];
           (
             way["highway"~"motorway|trunk|primary|secondary"](around:${radiusMeters},${lat},${lng});
             node["amenity"="fuel"](around:${radiusMeters},${lat},${lng});
             way["amenity"="fuel"](around:${radiusMeters},${lat},${lng});
             node["amenity"~"police|hospital|shelter"](around:${radiusMeters},${lat},${lng});
           );
-          out center 80;
+          out center 40;
         `;
 
         let data = null;
@@ -958,7 +1104,7 @@
         }
 
         if (!data) {
-          gpsStatusEl.textContent = "تعذر تحميل بيانات المنطقة الآن — تعمل النقاط المحفوظة والافتراضية";
+          gpsStatusEl.textContent = "تعذر تحميل بيانات المنطقة الآن — أضيفي نقاطكِ يدويًا أو جرّبي لاحقًا";
           return;
         }
 
@@ -974,21 +1120,21 @@
           const tags = el.tags || {};
           const name = tags.name || tags["name:ar"] || "";
 
-          if (tags.highway && road.length < 25) {
+          if (tags.highway && road.length < 15) {
             road.push({
               name: name || "طريق رئيسي قريب",
               note: `طريق (${tags.highway}) — محفوظ بدون نت`,
               lat: pLat,
               lng: pLng
             });
-          } else if (tags.amenity === "fuel" && station.length < 20) {
+          } else if (tags.amenity === "fuel" && station.length < 12) {
             station.push({
               name: name || "محطة وقود قريبة",
               note: "محطة وقود — محفوظة بدون نت",
               lat: pLat,
               lng: pLng
             });
-          } else if (tags.amenity && safety.length < 15) {
+          } else if (tags.amenity && safety.length < 10) {
             safety.push({
               name: name || "نقطة أمان / خدمة قريبة",
               note: `نقطة خدمة (${tags.amenity}) — محفوظة بدون نت`,
@@ -1007,7 +1153,7 @@
 
         persistAreaPoints(areaPoints);
         renderOfflineDataStatus();
-        gpsStatusEl.textContent = "تم حفظ بيانات الطرق والمحطات بنجاح للعمل بدون نت";
+        gpsStatusEl.textContent = "تم حفظ بيانات المنطقة بنجاح للعمل بدون نت";
       };
 
       if (currentPos) {
@@ -1128,6 +1274,7 @@
 
     renderSavedCarStatus();
     renderOfflineDataStatus();
+    renderCustomPointsList();
     renderHistoryList();
   </script>
 </body>
